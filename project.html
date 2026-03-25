@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Portal System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+ 
+<nav>
+    <div class="logo">
+        <div class="logo-icon">💼</div>
+        <span class="logo-text">Job Portal System</span>
+    </div>
+    <div class="nav-right" id="navRight"></div>
+</nav>
+ 
+<div id="toast"></div>
+ 
+<!-- LOGIN -->
+<div id="loginPage" class="page active">
+    <div class="auth-wrap">
+        <div class="auth-title">Welcome Back</div>
+        <div class="auth-sub">Sign in to continue to Job Portal System</div>
+        <div class="card">
+            <div class="form-group">
+                <label>Login As</label>
+                <select id="loginRole">
+                    <option value="candidate">Candidate</option>
+                    <option value="recruiter">Recruiter / Admin</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Username</label>
+                <input id="loginUser" placeholder="Enter username">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input id="loginPass" type="password" placeholder="Enter password">
+            </div>
+            <button class="btn btn-primary" style="width:100%;justify-content:center;padding:12px;" onclick="login()">Sign In →</button>
+            <p style="text-align:center;margin-top:18px;font-size:0.85rem;color:var(--text-muted);">
+                No account? <span class="auth-link" onclick="showPage('registerPage')">Create one</span>
+            </p>
+        </div>
+        <p style="text-align:center;margin-top:16px;font-size:0.75rem;color:var(--text-muted);">Demo: user/123 (Candidate) · hr/123 (Recruiter)</p>
+    </div>
+</div>
+ 
+<!-- REGISTER -->
+<div id="registerPage" class="page">
+    <div class="auth-wrap">
+        <div class="auth-title">Create Account</div>
+        <div class="auth-sub">Join Job Portal System today</div>
+        <div class="card">
+            <div class="form-group">
+                <label>Register As</label>
+                <select id="newRole" onchange="toggleAdminField()">
+                    <option value="candidate">Candidate</option>
+                    <option value="recruiter">Recruiter</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Username</label>
+                <input id="newUser" placeholder="Choose a username">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input id="newPass" type="password" placeholder="Choose a password">
+            </div>
+            <div id="adminArea" style="display:none;" class="form-group">
+                <label>Recruiter Access Code</label>
+                <input id="adminCode" placeholder="Enter access code">
+            </div>
+            <button class="btn btn-primary" style="width:100%;justify-content:center;padding:12px;" onclick="register()">Create Account</button>
+            <button class="btn btn-outline" style="width:100%;justify-content:center;padding:12px;margin-top:10px;" onclick="showPage('loginPage')">← Back to Login</button>
+        </div>
+    </div>
+</div>
+ 
+<!-- CANDIDATE PAGE -->
+<div id="candidatePage" class="page">
+    <div class="jobs-header">
+        <div>
+            <h2>Open Positions</h2>
+            <p style="color:var(--text-muted);font-size:0.9rem;margin-top:4px;" id="jobCount"></p>
+        </div>
+    </div>
+    <div id="jobsList" class="job-grid"></div>
+ 
+    <div class="my-apps" id="myAppsSection" style="display:none;">
+        <div class="my-apps-title">📋 My Applications</div>
+        <div id="notificationsArea"></div>
+        <div id="myAppsList"></div>
+    </div>
+</div>
+ 
+<!-- RECRUITER PAGE -->
+<div id="recruiterPage" class="page">
+    <div style="margin-bottom:24px;">
+        <h2 style="font-family:'Syne',sans-serif;font-size:1.7rem;font-weight:800;">Recruiter Dashboard</h2>
+        <p style="color:var(--text-muted);font-size:0.9rem;margin-top:4px;">Manage job postings and review applicants</p>
+    </div>
+    <div class="rec-layout">
+        <div>
+            <div class="card">
+                <div class="card-header">📝 Post New Job</div>
+                <div class="form-group"><label>Job Title</label><input id="jTitle" placeholder="e.g. Senior Frontend Dev"></div>
+                <div class="form-group"><label>Company Name</label><input id="jCompany" placeholder="e.g. Acme Corp"></div>
+                <div class="form-group"><label>Salary Range</label><input id="jSalary" placeholder="e.g. ₹12–18 LPA"></div>
+                <div class="form-group"><label>Location</label><input id="jLocation" placeholder="e.g. Hyderabad / Remote"></div>
+                <div class="form-group"><label>Job Type</label>
+                    <select id="jType">
+                        <option>Full-Time</option><option>Part-Time</option><option>Contract</option><option>Internship</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Required Skills (comma-separated)</label>
+                    <textarea id="jSkills" placeholder="e.g. react, node.js, typescript" style="height:80px;"></textarea>
+                </div>
+                <div class="form-group"><label>Description</label>
+                    <textarea id="jDesc" placeholder="Brief job description..." style="height:80px;"></textarea>
+                </div>
+                <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="postJob()">Publish Posting</button>
+            </div>
+        </div>
+        <div>
+            <div class="rec-panel-title">Applicants</div>
+            <div class="tab-row" id="filterTabs">
+                <button class="tab-btn active" onclick="filterApps('all', this)">All</button>
+                <button class="tab-btn" onclick="filterApps('pending', this)">Pending</button>
+                <button class="tab-btn" onclick="filterApps('accepted', this)">Accepted</button>
+                <button class="tab-btn" onclick="filterApps('rejected', this)">Rejected</button>
+            </div>
+            <div id="appsList"></div>
+        </div>
+    </div>
+</div>
+ 
+<!-- LOGOUT PAGE -->
+<div id="logoutPage" class="page">
+    <div class="logout-screen card">
+        <div class="logout-icon">✓</div>
+        <h2 style="font-family:'Syne',sans-serif;font-weight:800;margin-bottom:10px;">Session Ended</h2>
+        <p style="color:var(--text-muted);margin-bottom:28px;">You've been securely logged out of Job Portal System.</p>
+        <button class="btn btn-primary" onclick="showPage('loginPage')">Log Back In</button>
+    </div>
+</div>
+ 
+<!-- APPLY MODAL -->
+<div id="applyModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-title" id="applyModalTitle">Apply for Position</div>
+        <div class="modal-sub" id="applyModalCompany"></div>
+        <hr class="modal-hr">
+        <div class="info-grid">
+            <div class="form-group"><label>Full Name *</label><input id="appFull" placeholder="Your full name"></div>
+            <div class="form-group"><label>Email Address *</label><input id="appMail" placeholder="your@email.com" type="email"></div>
+            <div class="form-group"><label>Years of Experience *</label><input id="appExperience" placeholder="e.g. 3" type="number" min="0"></div>
+            <div class="form-group"><label>LinkedIn Profile</label><input id="appLinkedin" placeholder="linkedin.com/in/username"></div>
+        </div>
+        <div class="form-group"><label>Portfolio / GitHub / Website</label><input id="appUrl" placeholder="https://..."></div>
+        <div class="form-group"><label>Resume Upload (PDF)</label><input type="file" id="appFile" accept=".pdf"></div>
+        <div class="form-group"><label>Professional Summary / Resume Text *</label>
+            <textarea id="appText" placeholder="Paste your resume content or write a detailed professional summary. Mention your skills, experience, and projects..." style="height:150px;"></textarea>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:8px;">
+            <button class="btn btn-primary" style="flex:1;justify-content:center;" onclick="submitApp()">Submit Application →</button>
+            <button class="btn btn-outline" onclick="closeModal('applyModal')">Cancel</button>
+        </div>
+    </div>
+</div>
+ 
+<!-- VIEW APPLICANT MODAL (RECRUITER) -->
+<div id="viewModal" class="modal">
+    <div class="modal-content">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;">
+            <div>
+                <div class="modal-title" id="vName"></div>
+                <div id="vJobTitle" style="color:var(--brand);font-weight:600;font-size:0.95rem;margin-top:3px;"></div>
+            </div>
+            <div id="vStatusBadge"></div>
+        </div>
+        <hr class="modal-hr">
+ 
+        <div class="section-label">Contact & Profile</div>
+        <div class="info-grid">
+            <div class="info-block"><label>Email</label><p id="vEmail"></p></div>
+            <div class="info-block"><label>Experience</label><p id="vExp"></p></div>
+            <div class="info-block"><label>LinkedIn</label><p id="vLinkedin"></p></div>
+            <div class="info-block"><label>Portfolio / GitHub</label><p id="vUrl"></p></div>
+        </div>
+ 
+        <div class="section-label" style="margin-top:6px;">Resume / PDF</div>
+        <div id="vResumeLink" style="margin-bottom:14px;"></div>
+ 
+        <div class="section-label">Matched Skills</div>
+        <div id="vMatchedSkills" class="matched-skills" style="margin-bottom:16px;"></div>
+ 
+        <div class="section-label">Professional Summary</div>
+        <div id="vText" class="resume-box"></div>
+ 
+        <div id="vScore" style="margin-top:12px;font-size:0.85rem;color:var(--text-muted);"></div>
+ 
+        <!-- DECISION AREA -->
+        <div id="decisionArea" class="decision-area">
+            <div class="decision-title">📌 Application Decision</div>
+            <div id="decisionContent"></div>
+        </div>
+ 
+        <button class="btn btn-outline" style="margin-top:18px;width:100%;justify-content:center;" onclick="closeModal('viewModal')">Close</button>
+    </div>
+</div>
+ 
+<!-- REJECT REASON MODAL -->
+<div id="rejectModal" class="modal">
+    <div class="modal-content" style="max-width:480px;">
+        <div class="modal-title">Reject Application</div>
+        <p style="color:var(--text-muted);margin:8px 0 20px;font-size:0.88rem;">Provide a reason so the candidate can improve for future opportunities.</p>
+        <div class="form-group">
+            <label>Reason for Rejection *</label>
+            <select id="rejectReason" onchange="toggleCustomReason()">
+                <option value="">Select a reason...</option>
+                <option value="Skills mismatch">Skills don't meet our requirements</option>
+                <option value="Insufficient experience">Insufficient experience for this role</option>
+                <option value="Position filled internally">Position has been filled internally</option>
+                <option value="Overqualified">Candidate is overqualified for this role</option>
+                <option value="Budget constraints">Role is currently on hold due to budget</option>
+                <option value="custom">Other (specify below)</option>
+            </select>
+        </div>
+        <div class="form-group" id="customReasonArea" style="display:none;">
+            <label>Custom Reason</label>
+            <textarea id="customReason" placeholder="Write your reason here..." style="height:90px;"></textarea>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:8px;">
+            <button class="btn btn-danger" style="flex:1;justify-content:center;" onclick="confirmReject()">Confirm Rejection</button>
+            <button class="btn btn-outline" onclick="closeModal('rejectModal')">Cancel</button>
+        </div>
+    </div>
+</div>
+<script src="script.js"></script>
+</body>
+</html>
